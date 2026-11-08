@@ -354,3 +354,33 @@ TEST(DNSQuestionEncoding, InvalidDomain) {
 	
 	EXPECT_THROW(dns::encodeQuestion(question), std::invalid_argument);
 }
+
+/// QUERY TESTING ///
+TEST(DNSQueryEncoding, Standard) {
+	dns::Header header;
+	header.id = 0xABCD;
+	header.flags = 0x0100;
+	header.questionCount = 0x0001;
+
+	dns::Question question("example.com", dns::QType::A);
+
+	std::vector<std::uint8_t> expected {
+		0xAB, 0xCD, 0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x07, 0x65, 0x78, 0x61, 0x6D, 0x70, 0x6C, 0x65, 0x03, 0x63, 0x6F, 0x6D, 0x00, 0x00, 0x01, 0x00, 0x01
+	};
+
+	std::vector<std::uint8_t> actual = dns::encodeQuery(header, question);
+
+	EXPECT_EQ(expected, actual);
+}
+
+TEST(DNSQueryEncoding, InvalidQDCount) {
+	dns::Header header;
+	header.id = 0xABCD;
+	header.flags = 0x0100;
+	header.questionCount = 0x0002;
+
+	dns::Question question("example.com", dns::QType::A);
+
+	EXPECT_THROW(dns::encodeQuery(header, question), std::invalid_argument);
+}

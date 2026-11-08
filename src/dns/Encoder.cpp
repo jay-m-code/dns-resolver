@@ -56,8 +56,6 @@ std::vector<std::uint8_t>  dns::encodeDomainName(const std::string& domain) {
         throw std::invalid_argument("Inputted domain is too long!");
     }
 
-
-
     while (!domainView.empty()) {
         std::size_t nextDot = domainView.find('.');
         std::string_view label = domainView.substr(0, nextDot);
@@ -84,4 +82,18 @@ std::vector<std::uint8_t>  dns::encodeDomainName(const std::string& domain) {
     bytes.push_back(0);
 
     return bytes;
+}
+
+std::vector<std::uint8_t> dns::encodeQuery(const Header& header, const Question& question) {
+    if (header.questionCount != 1) {
+        throw std::invalid_argument("Encode Query Header only supports 1 Question!");
+    }
+
+    std::vector<std::uint8_t> header_bytes = encodeHeader(header);
+    std::vector<std::uint8_t> question_bytes = encodeQuestion(question);
+
+    header_bytes.reserve(header_bytes.size() + question_bytes.size());
+    header_bytes.insert(header_bytes.end(), question_bytes.begin(), question_bytes.end());
+
+    return header_bytes;
 }
