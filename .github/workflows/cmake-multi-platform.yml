@@ -12,14 +12,14 @@ permissions:
 
 jobs:
   build:
-    name: ${{ matrix.os }} - ${{ matrix.compiler }} - ${{ matrix.build_type }}
-    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.platform.os }} - ${{ matrix.platform.compiler }} - ${{ matrix.build_type }}
+    runs-on: ${{ matrix.platform.os }}
 
     strategy:
       fail-fast: false
       matrix:
         build_type: [Debug, Release]
-        include:
+        platform:
           - os: ubuntu-latest
             compiler: GCC
             cpp_compiler: g++
@@ -38,12 +38,14 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Configure CMake
         run: >
           cmake -S . -B build
-          -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
+          -DCMAKE_CXX_COMPILER=${{ matrix.platform.cpp_compiler }}
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
 
       - name: Build
