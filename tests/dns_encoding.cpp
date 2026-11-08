@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 #include "dns/Encoder.h"
 
+//	DNS NAME TEST //
+
 // VALID TESTS
 
 TEST(DNSNameEncoding, Domain)
@@ -241,4 +243,63 @@ TEST(DNSNameEncoding, OversizedMiddleLabel)
 		dns::encodeDomainName(domain),
 		std::invalid_argument
 	);
+}
+
+/// DNS HEADER TEST ///
+
+TEST(DNSHeaderEncoding, Default)
+{
+	dns::Header header;
+	std::vector<std::uint8_t> actual = dns::encodeHeader(header);
+	std::vector<std::uint8_t> expected {
+		0x00, 0x00,
+		0x00, 0x00,
+		0x00, 0x00,
+		0x00, 0x00,
+		0x00, 0x00,
+		0x00, 0x00
+	};
+
+	EXPECT_EQ(expected, actual);
+}
+
+TEST(DNSHeaderEncoding, Standard)
+{
+	dns::Header header;
+	header.id = 0x1234;
+	header.flags = 0x0100;
+	header.questionCount = 0x0001;
+	std::vector<std::uint8_t> actual = dns::encodeHeader(header);
+	std::vector<std::uint8_t> expected {
+		0x12, 0x34,
+		0x01, 0x00,
+		0x00, 0x01,
+		0x00, 0x00,
+		0x00, 0x00,
+		0x00, 0x00
+	};
+
+	EXPECT_EQ(expected, actual);
+}
+
+TEST(DNSHeaderEncoding, AllFields)
+{
+	dns::Header header;
+	header.id = 0xFFEE;
+	header.flags = 0xDDCC;
+	header.questionCount = 0xBBAA;
+	header.answerCount = 0x9988;
+	header.authorityCount = 0x7766;
+	header.additionalCount = 0x5544;
+	std::vector<std::uint8_t> actual = dns::encodeHeader(header);
+	std::vector<std::uint8_t> expected {
+		0xFF, 0xEE,
+		0xDD, 0xCC,
+		0xBB, 0xAA,
+		0x99, 0x88,
+		0x77, 0x66,
+		0x55, 0x44
+	};
+
+	EXPECT_EQ(expected, actual);
 }

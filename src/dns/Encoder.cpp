@@ -2,6 +2,23 @@
 #include <string_view>
 #include <stdexcept>
 
+std::vector<std::uint8_t> dns::encodeHeader(const Header& header) {
+    std::vector<std::uint8_t> bytes;
+    bytes.reserve(12);
+
+    const std::uint16_t headArray[6] = {header.id, header.flags, header.questionCount, header.answerCount, header.authorityCount, header.additionalCount};
+
+    for (std::uint16_t field : headArray) {
+        std::uint8_t byteOne = field >> 8;
+        std::uint8_t byteTwo = field;
+
+        bytes.push_back(byteOne);
+        bytes.push_back(byteTwo);
+    }
+
+    return bytes;
+}
+
 std::vector<std::uint8_t>  dns::encodeDomainName(const std::string& domain) {
     std::vector<std::uint8_t> bytes;
 
