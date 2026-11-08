@@ -2,6 +2,16 @@
 #include <string_view>
 #include <stdexcept>
 
+namespace {
+    void appendUint16BE(std::vector<std::uint8_t>& bytes, std::uint16_t data) {
+        std::uint8_t byteOne = data >> 8;
+        std::uint8_t byteTwo = data;
+
+        bytes.push_back(byteOne);
+        bytes.push_back(byteTwo);
+    }
+}
+
 std::vector<std::uint8_t> dns::encodeHeader(const Header& header) {
     std::vector<std::uint8_t> bytes;
     bytes.reserve(12);
@@ -9,11 +19,7 @@ std::vector<std::uint8_t> dns::encodeHeader(const Header& header) {
     const std::uint16_t headArray[6] = {header.id, header.flags, header.questionCount, header.answerCount, header.authorityCount, header.additionalCount};
 
     for (std::uint16_t field : headArray) {
-        std::uint8_t byteOne = field >> 8;
-        std::uint8_t byteTwo = field;
-
-        bytes.push_back(byteOne);
-        bytes.push_back(byteTwo);
+        appendUint16BE(bytes, field);
     }
 
     return bytes;
