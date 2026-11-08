@@ -28,6 +28,7 @@ FetchContent_MakeAvailable(googletest)
 # DNS library
 add_library(dns STATIC
 	src/dns/Encoder.cpp
+	src/dns/QueryBuilder.cpp
 )
 
 # Include
@@ -57,6 +58,17 @@ target_link_libraries(dnsNameEncoding PRIVATE
 	GTest::gtest_main
 )
 
+# Query Builder
+add_executable(dnsQueryBuilder
+	tests/dns_query_builder.cpp
+)
+
+target_link_libraries(dnsQueryBuilder PRIVATE
+	dns
+	GTest::gtest_main
+)
+
 include(GoogleTest)
 
 gtest_discover_tests(dnsNameEncoding)
+gtest_discover_tests(dnsQueryBuilder)
