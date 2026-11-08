@@ -15,6 +15,10 @@ std::vector<std::uint8_t>  dns::encodeDomainName(const std::string& domain) {
         domainView.remove_suffix(1);
     }
 
+    if (!domainView.empty() && domainView.back() == '.') {
+        throw std::invalid_argument("Inputted domain has multiple trailing dots.");
+    }
+
     if (domainView.length() > 253) {
         throw std::invalid_argument("Inputted domain is too long!");
     }
