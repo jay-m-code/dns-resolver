@@ -31,8 +31,17 @@ add_library(dns STATIC
 	src/dns/QueryBuilder.cpp
 )
 
+# Network Library
+add_library(network STATIC
+	src/network/UDPTransport.cpp
+)
+
 # Include
 target_include_directories(dns PUBLIC
+	${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+target_include_directories(network PUBLIC
 	${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
@@ -44,6 +53,7 @@ add_executable(dnslookup
 # Executable Libraries
 target_link_libraries(dnslookup PRIVATE
 	dns
+	network
 )
 
 # Add Tests
