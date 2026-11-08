@@ -25,6 +25,16 @@ std::vector<std::uint8_t> dns::encodeHeader(const Header& header) {
     return bytes;
 }
 
+std::vector<std::uint8_t> dns::encodeQuestion(const Question& question) {
+    std::vector<std::uint8_t> bytes = encodeDomainName(question.domainName);
+    bytes.reserve(bytes.size() + 4);
+
+    appendUint16BE(bytes, static_cast<std::uint16_t>(question.qType));
+    appendUint16BE(bytes, static_cast<std::uint16_t>(question.qClass));
+
+    return bytes;
+}
+
 std::vector<std::uint8_t>  dns::encodeDomainName(const std::string& domain) {
     std::vector<std::uint8_t> bytes;
 

@@ -303,3 +303,54 @@ TEST(DNSHeaderEncoding, AllFields)
 
 	EXPECT_EQ(expected, actual);
 }
+
+/// QUESTION ENCODING ///
+// Valid
+TEST(DNSQuestionEncoding, Standard) {
+	dns::Question question("example.com", dns::QType::A, dns::QClass::IN);
+	std::vector<std::uint8_t> expected {
+		0x07, 'e', 'x', 'a', 'm', 'p', 'l', 'e',
+		0x03, 'c', 'o', 'm',
+		0x00,
+		0x00, 0x01,
+		0x00, 0x01
+	};
+	std::vector<std::uint8_t> actual = dns::encodeQuestion(question);
+
+	EXPECT_EQ(expected, actual);
+}
+
+TEST(DNSQuestionEncoding, Different) {
+	dns::Question question("example.com", dns::QType::AAAA, dns::QClass::CH);
+	std::vector<std::uint8_t> expected {
+		0x07, 'e', 'x', 'a', 'm', 'p', 'l', 'e',
+		0x03, 'c', 'o', 'm',
+		0x00,
+		0x00, 0x1C,
+		0x00, 0x03
+	};
+	std::vector<std::uint8_t> actual = dns::encodeQuestion(question);
+
+	EXPECT_EQ(expected, actual);
+}
+
+TEST(DNSQuestionEncoding, Custom) {
+	dns::Question question("example.com", static_cast<dns::QType>(0xFEDC), static_cast<dns::QClass>(0xBA98));
+	std::vector<std::uint8_t> expected {
+		0x07, 'e', 'x', 'a', 'm', 'p', 'l', 'e',
+		0x03, 'c', 'o', 'm',
+		0x00,
+		0xFE, 0xDC,
+		0xBA, 0x98
+	};
+	std::vector<std::uint8_t> actual = dns::encodeQuestion(question);
+
+	EXPECT_EQ(expected, actual);
+}
+
+// Invalid
+TEST(DNSQuestionEncoding, InvalidDomain) {
+	dns::Question question("example..com", dns::QType::AAAA, dns::QClass::CH);
+	
+	EXPECT_THROW(dns::encodeQuestion(question), std::invalid_argument);
+}
