@@ -27,12 +27,12 @@ class UDPTransport {
 		UDPTransport(const UDPTransport&) = delete;
 		UDPTransport& operator=(const UDPTransport&) = delete;
 
-		void sendTo(
-			std::span<const std::uint8_t> data,
-			const Endpoint& destination
-		);
+		void sendTo(std::span<const std::uint8_t> data, const Endpoint& destination );
 
 		std::optional<Datagram> receiveFrom();
+
+		void bind(const Endpoint& localAddress);
+		Endpoint localEndpoint() const;
 
 	private:
 		struct Impl;

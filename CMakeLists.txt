@@ -78,7 +78,18 @@ target_link_libraries(dnsQueryBuilder PRIVATE
 	GTest::gtest_main
 )
 
+# UDP Transport
+add_executable(udpTransport
+	tests/udp_transport.cpp
+)
+
+target_link_libraries(udpTransport PRIVATE
+	network
+	GTest::gtest_main
+)
+
 include(GoogleTest)
 
 gtest_discover_tests(dnsNameEncoding)
 gtest_discover_tests(dnsQueryBuilder)
+gtest_discover_tests(udpTransport)

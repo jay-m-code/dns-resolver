@@ -115,4 +115,51 @@ std::optional<Datagram> UDPTransport::receiveFrom() {
     return datagram;
 }
 
+void UDPTransport::bind(const Endpoint& localAddress) {
+    sockaddr_in address {};
+    address.sin_family = AF_INET;
+    address.sin_port = htons(localAddress.port);
+    int result = inet_pton(AF_INET, localAddress.address.c_str(), &address.sin_addr);
+
+    switch (result)
+    {
+    case -1:
+        throw std::system_error(errno, std::generic_category(), "Failed to set IP address!");
+    case 0:
+        throw std::invalid_argument("Invalid IP address!");
+    default:
+        break;
+    }
+
+    int bindResult = ::bind(impl->socketHandle, reinterpret_cast<const sockaddr*>(&address), sizeof(address));
+    if (bindResult == -1) {
+        throw std::system_error(errno, std::generic_category(), "Failed to bind!");
+    }
+}
+
+Endpoint UDPTransport::localEndpoint() const {
+    sockaddr_in localAddress {};
+    socklen_t size = sizeof(localAddress);
+
+    int result = getsockname(impl->socketHandle, reinterpret_cast<sockaddr*>(&localAddress), &size);
+
+    if (result == -1) {
+        throw std::system_error(errno, std::generic_category(), "Failed to get local endpoint!");
+    }
+
+    std::uint16_t port = ntohs(localAddress.sin_port);
+
+    std::array<char, INET_ADDRSTRLEN> ipBuffer{};
+    const char* localIP = inet_ntop(AF_INET, &localAddress.sin_addr, ipBuffer.data(), ipBuffer.size());
+    
+    if (localIP == nullptr) {
+        throw std::system_error(errno, std::generic_category(), "failed to retrieve local IP");
+    }
+
+    Endpoint endpoint {localIP, port};
+
+    return endpoint;
+}
+
+
 }
