@@ -31,10 +31,23 @@ add_library(dns STATIC
 	src/dns/QueryBuilder.cpp
 )
 
+
+
 # Network Library
+# Choose correct file
+if(WIN32)
+    set(NETWORK_SOURCE src/network/UDPTransport_WIN.cpp)
+else()
+    set(NETWORK_SOURCE src/network/UDPTransport_POSIX.cpp)
+endif()
+
 add_library(network STATIC
-	src/network/UDPTransport.cpp
+	${NETWORK_SOURCE}
 )
+
+if(WIN32)
+	target_link_libraries(network PRIVATE ws2_32)
+endif()
 
 # Include
 target_include_directories(dns PUBLIC
