@@ -2,6 +2,7 @@
 #include "network/UDPTransport.h"
 #include <array>
 #include <stdexcept>
+#include <thread>
 
 TEST(UDPTransport, Loopback) {
     network::UDPTransport receiver;
