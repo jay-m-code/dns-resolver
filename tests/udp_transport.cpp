@@ -32,7 +32,7 @@ TEST(UDPTransport, Loopback) {
 
 TEST(UDPTransport, EmptyQueue) {
     network::UDPTransport receiver;
-
+    receiver.bind({"127.0.0.1", 0});
     std::optional<network::Datagram> datagram = receiver.receiveFrom();
 
     EXPECT_FALSE(datagram.has_value());
