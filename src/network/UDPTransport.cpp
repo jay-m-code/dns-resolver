@@ -11,6 +11,38 @@
 #include <array>
 #include <utility>
 
+namespace {
+    sockaddr_in toSockaddr(const network::Endpoint& endpoint) {
+        sockaddr_in address {};
+        address.sin_family = AF_INET;
+        address.sin_port = htons(endpoint.port);
+        int result = inet_pton(AF_INET, endpoint.address.c_str(), &address.sin_addr);
+
+        switch (result)
+        {
+        case -1:
+            throw std::system_error(errno, std::generic_category(), "Failed to set IP address!");
+        case 0:
+            throw std::invalid_argument("Invalid IP address!");
+        default:
+            break;
+        }
+
+        return address;
+    }
+
+    network::Endpoint fromSockAddr(const sockaddr_in& address) {
+        std::uint16_t port = ntohs(address.sin_port);
+        std::array<char, INET_ADDRSTRLEN> ipBuffer{};
+        const char* IP = inet_ntop(AF_INET, &address.sin_addr, ipBuffer.data(), ipBuffer.size());
+        if (IP == nullptr) {
+            throw std::system_error(errno, std::generic_category(), "failed to retrieve IP");
+        }
+
+        return {IP, port};
+    }
+}
+
 namespace network {
 
 struct UDPTransport::Impl {
@@ -49,27 +81,12 @@ struct UDPTransport::Impl {
     }
 };
 
-UDPTransport::UDPTransport(): impl(std::make_unique<Impl>()) {
-
-}
+UDPTransport::UDPTransport(): impl(std::make_unique<Impl>()) {}
 
 UDPTransport::~UDPTransport() = default;
 
 void UDPTransport::sendTo(std::span<const std::uint8_t> data, const Endpoint& destination) {
-    sockaddr_in address {};
-    address.sin_family = AF_INET;
-    address.sin_port = htons(destination.port);
-    int result = inet_pton(AF_INET, destination.address.c_str(), &address.sin_addr);
-
-    switch (result)
-    {
-    case -1:
-        throw std::system_error(errno, std::generic_category(), "Failed to set IP address!");
-    case 0:
-        throw std::invalid_argument("Invalid IP address!");
-    default:
-        break;
-    }
+    sockaddr_in address = toSockaddr(destination);
 
     ssize_t sendResult = sendto(
         impl->socketHandle,
@@ -100,36 +117,15 @@ std::optional<Datagram> UDPTransport::receiveFrom() {
     }
 
     std::vector<uint8_t> data(impl->buffer.begin(), impl->buffer.begin() + receivedSize);
-    std::uint16_t port = ntohs(sender.sin_port);
 
-    std::array<char, INET_ADDRSTRLEN> ipBuffer{};
-    const char* senderIP = inet_ntop(AF_INET, &sender.sin_addr, ipBuffer.data(), ipBuffer.size());
-    
-    if (senderIP == nullptr) {
-        throw std::system_error(errno, std::generic_category(), "failed to retrieve sender IP");
-    }
-
-    Endpoint endpoint {senderIP, port};
+    Endpoint endpoint = fromSockAddr(sender);
     Datagram datagram {std::move(data), endpoint};
 
     return datagram;
 }
 
 void UDPTransport::bind(const Endpoint& localAddress) {
-    sockaddr_in address {};
-    address.sin_family = AF_INET;
-    address.sin_port = htons(localAddress.port);
-    int result = inet_pton(AF_INET, localAddress.address.c_str(), &address.sin_addr);
-
-    switch (result)
-    {
-    case -1:
-        throw std::system_error(errno, std::generic_category(), "Failed to set IP address!");
-    case 0:
-        throw std::invalid_argument("Invalid IP address!");
-    default:
-        break;
-    }
+    sockaddr_in address = toSockaddr(localAddress);
 
     int bindResult = ::bind(impl->socketHandle, reinterpret_cast<const sockaddr*>(&address), sizeof(address));
     if (bindResult == -1) {
@@ -147,18 +143,7 @@ Endpoint UDPTransport::localEndpoint() const {
         throw std::system_error(errno, std::generic_category(), "Failed to get local endpoint!");
     }
 
-    std::uint16_t port = ntohs(localAddress.sin_port);
-
-    std::array<char, INET_ADDRSTRLEN> ipBuffer{};
-    const char* localIP = inet_ntop(AF_INET, &localAddress.sin_addr, ipBuffer.data(), ipBuffer.size());
-    
-    if (localIP == nullptr) {
-        throw std::system_error(errno, std::generic_category(), "failed to retrieve local IP");
-    }
-
-    Endpoint endpoint {localIP, port};
-
-    return endpoint;
+    return fromSockAddr(localAddress);
 }
 
 
