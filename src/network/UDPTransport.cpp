@@ -8,11 +8,14 @@
 #include <fcntl.h>
 #include <arpa/inet.h>
 #include <stdexcept>
+#include <array>
+#include <utility>
 
 namespace network {
 
 struct UDPTransport::Impl {
 	int socketHandle = -1;
+    std::array<std::uint8_t, 65507> buffer {};
 
     Impl(const Impl&) = delete;
     Impl& operator=(const Impl&) = delete;
@@ -82,6 +85,34 @@ void UDPTransport::sendTo(std::span<const std::uint8_t> data, const Endpoint& de
     }
 
 
+}
+
+std::optional<Datagram> UDPTransport::receiveFrom() {
+    sockaddr_in sender {};
+    socklen_t size = sizeof(sender);
+
+    ssize_t receivedSize = recvfrom(impl->socketHandle, impl->buffer.data(), impl->buffer.size(), 0, reinterpret_cast<sockaddr*>(&sender), &size);
+
+    if (receivedSize == -1 && !(errno == EAGAIN || errno == EWOULDBLOCK)) {
+        throw std::system_error(errno, std::generic_category(), "Failed to receive data!");
+    } else if (receivedSize == -1) {
+        return std::nullopt;
+    }
+
+    std::vector<uint8_t> data(impl->buffer.begin(), impl->buffer.begin() + receivedSize);
+    std::uint16_t port = ntohs(sender.sin_port);
+
+    std::array<char, INET_ADDRSTRLEN> ipBuffer{};
+    const char* senderIP = inet_ntop(AF_INET, &sender.sin_addr, ipBuffer.data(), ipBuffer.size());
+    
+    if (senderIP == nullptr) {
+        throw std::system_error(errno, std::generic_category(), "failed to retrieve sender IP");
+    }
+
+    Endpoint endpoint {senderIP, port};
+    Datagram datagram {std::move(data), endpoint};
+
+    return datagram;
 }
 
 }
