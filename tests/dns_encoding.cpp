@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "dns/Encoder.h"
+#include "dns/Decoder.h"
 
 //	DNS NAME TEST //
 
@@ -261,6 +262,9 @@ TEST(DNSHeaderEncoding, Default)
 	};
 
 	EXPECT_EQ(expected, actual);
+
+	dns::Header actualHeader = dns::decodeHeader(expected);
+	EXPECT_EQ(header, actualHeader);
 }
 
 TEST(DNSHeaderEncoding, Standard)
@@ -280,6 +284,9 @@ TEST(DNSHeaderEncoding, Standard)
 	};
 
 	EXPECT_EQ(expected, actual);
+
+	dns::Header actualHeader = dns::decodeHeader(expected);
+	EXPECT_EQ(header, actualHeader);
 }
 
 TEST(DNSHeaderEncoding, AllFields)
@@ -302,6 +309,9 @@ TEST(DNSHeaderEncoding, AllFields)
 	};
 
 	EXPECT_EQ(expected, actual);
+
+	dns::Header actualHeader = dns::decodeHeader(expected);
+	EXPECT_EQ(header, actualHeader);
 }
 
 /// QUESTION ENCODING ///

@@ -29,6 +29,7 @@ FetchContent_MakeAvailable(googletest)
 add_library(dns STATIC
 	src/dns/Encoder.cpp
 	src/dns/QueryBuilder.cpp
+	src/dns/Decoder.cpp
 )
 
 

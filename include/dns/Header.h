@@ -3,6 +3,7 @@
 
 namespace dns {
     struct Header {
+        bool operator==(const Header&) const = default;
         std::uint16_t id = 0;
         std::uint16_t flags = 0;
         std::uint16_t questionCount = 0;
