@@ -75,6 +75,7 @@ target_link_libraries(dnslookup PRIVATE
 # Name Encoding
 add_executable(dnsNameEncoding
 	tests/dns_encoding.cpp
+	tests/dns_decoding.cpp
 )
 
 target_link_libraries(dnsNameEncoding PRIVATE
