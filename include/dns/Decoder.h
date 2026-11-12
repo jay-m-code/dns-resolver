@@ -8,6 +8,6 @@
 namespace dns
 {
     Header decodeHeader(std::span<const std::uint8_t> packet);
-    Question decodeQuestion(std::span<const std::uint8_t> packet);
+    Question decodeQuestion(std::span<const std::uint8_t> packet, std::size_t& offset);
     std::string decodeDomain(std::span<const std::uint8_t> packet, std::size_t& offset);
 };

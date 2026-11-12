@@ -102,4 +102,21 @@ std::string decodeDomain(std::span<const std::uint8_t> packet, std::size_t& offs
 }
 
 
+Question decodeQuestion(std::span<const std::uint8_t> packet, std::size_t& offset) {
+	std::string domain = decodeDomain(packet, offset);
+
+	if (offset > packet.size() || packet.size() - offset < 4) {
+		throw std::invalid_argument("Truncated DNS question");
+	}
+
+	std::uint16_t qType = toUint16from8BE(packet[offset], packet[offset + 1]);
+	offset += 2;
+	std::uint16_t qClass = toUint16from8BE(packet[offset], packet[offset + 1]);
+	offset += 2;
+
+
+	return Question(domain, static_cast<QType>(qType), static_cast<QClass>(qClass));
+}
+
+
 }
