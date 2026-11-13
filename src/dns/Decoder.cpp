@@ -152,11 +152,44 @@ ResourceRecord decodeResourceRecord(std::span<const std::uint8_t> packet, std::s
 		throw std::invalid_argument("Not enough space for rdata?");
 	}
 
+	record.rdataStart =offset;
+
 	record.rdata.insert(record.rdata.end(), packet.begin() + offset, packet.begin() + offset + rdLength);
 
 	offset += rdLength;
 
 	return record;
+}
+
+DNSMessage decodeDNSMessage(std::span<const std::uint8_t> packet) {
+	DNSMessage message;
+	message.packet.insert(message.packet.begin(), packet.begin(), packet.end());
+
+	message.header = decodeHeader(packet);
+	
+	std::size_t offset = 12;
+
+	for (int i=0; i < message.header.questionCount; i++) {
+		message.questions.push_back(decodeQuestion(packet, offset));
+	}
+
+	for (int i=0; i < message.header.answerCount; i++) {
+		message.answers.push_back(decodeResourceRecord(packet, offset));
+	}
+
+	for (int i=0; i < message.header.authorityCount; i++) {
+		message.authorities.push_back(decodeResourceRecord(packet, offset));
+	}
+
+	for (int i=0; i < message.header.additionalCount; i++) {
+		message.additionals.push_back(decodeResourceRecord(packet, offset));
+	}
+
+	if (offset != packet.size()) {
+		throw std::invalid_argument("Offset is not at end of packet?");
+	}
+
+	return message;
 }
 
 }

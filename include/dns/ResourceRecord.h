@@ -3,6 +3,7 @@
 #include <string>
 #include <cstdint>
 #include <vector>
+#include <cstddef>
 
 namespace dns {
     struct ResourceRecord
@@ -12,6 +13,8 @@ namespace dns {
         std::uint16_t recordClass = 0;
         std::uint32_t ttl = 0;
         std::vector<std::uint8_t> rdata;
+
+        std::size_t rdataStart = 0;
     };
     
 }
