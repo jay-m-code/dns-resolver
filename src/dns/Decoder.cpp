@@ -10,6 +10,15 @@ namespace {
 
         return bytes;
     }
+
+	std::uint32_t toUint32from8BE(std::uint8_t byteOne, std::uint8_t byteTwo, std::uint8_t byteThree, std::uint8_t byteFour) {
+        std::uint32_t bytes = static_cast<uint32_t>(byteOne) << 24;
+        bytes = bytes | (byteTwo << 16);
+		bytes = bytes | (byteThree << 8);
+		bytes = bytes | (byteFour);
+
+        return bytes;
+    }
 }
 
 namespace dns{
@@ -118,5 +127,36 @@ Question decodeQuestion(std::span<const std::uint8_t> packet, std::size_t& offse
 	return Question(domain, static_cast<QType>(qType), static_cast<QClass>(qClass));
 }
 
+ResourceRecord decodeResourceRecord(std::span<const std::uint8_t> packet, std::size_t& offset) {
+	ResourceRecord record;
+	record.name = decodeDomain(packet, offset);
+
+	if (offset > packet.size() || packet.size() - offset < 10) {
+		throw std::invalid_argument("Truncated DNS RR");
+	}
+
+	
+
+	record.type = toUint16from8BE(packet[offset], packet[offset + 1]);
+	offset += 2;
+	record.recordClass = toUint16from8BE(packet[offset], packet[offset + 1]);
+	offset += 2;
+
+	record.ttl = toUint32from8BE(packet[offset], packet[offset + 1], packet[offset + 2], packet[offset + 3]);
+	offset += 4;
+
+	std::uint16_t rdLength = toUint16from8BE(packet[offset], packet[offset + 1]);
+	offset += 2;
+	
+	if (offset > packet.size() || packet.size() - offset < rdLength) {
+		throw std::invalid_argument("Not enough space for rdata?");
+	}
+
+	record.rdata.insert(record.rdata.end(), packet.begin() + offset, packet.begin() + offset + rdLength);
+
+	offset += rdLength;
+
+	return record;
+}
 
 }
